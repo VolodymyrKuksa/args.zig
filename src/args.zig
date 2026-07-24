@@ -14,8 +14,6 @@ pub const help = @import("help.zig");
 pub const completion = @import("completion.zig");
 pub const config = @import("config.zig");
 pub const version_info = @import("version.zig");
-pub const update_checker = @import("update_checker.zig");
-pub const network = @import("network.zig");
 pub const utils = @import("utils.zig");
 pub const constants = @import("constants.zig");
 
@@ -88,7 +86,6 @@ pub const ArgumentParser = struct {
     add_help: bool = true,
     add_version: bool = true,
     cfg: Config,
-    update_thread: ?std.Thread = null,
 
     pub const InitOptions = struct {
         name: []const u8,
@@ -107,11 +104,6 @@ pub const ArgumentParser = struct {
     pub fn init(allocator: std.mem.Allocator, options: InitOptions) !ArgumentParser {
         const cfg = options.config orelse config.getConfig();
 
-        var update_thread: ?std.Thread = null;
-        if (cfg.check_for_updates and !builtin.is_test) {
-            update_thread = update_checker.checkForUpdates(allocator, cfg.show_update_notification, cfg.use_colors);
-        }
-
         return .{
             .allocator = allocator,
             .name = if (options.name.len > 0) options.name else (cfg.app_name orelse constants.Defaults.program_name),
@@ -128,16 +120,11 @@ pub const ArgumentParser = struct {
             .add_help = options.add_help,
             .add_version = options.add_version,
             .cfg = cfg,
-            .update_thread = update_thread,
         };
     }
 
     /// Releases all resources allocated by the parser.
     pub fn deinit(self: *ArgumentParser) void {
-        if (self.update_thread) |thread| {
-            thread.join();
-            self.update_thread = null;
-        }
         self.args.deinit(self.allocator);
         for (self.groups.items) |*g| g.deinit(self.allocator);
         self.groups.deinit(self.allocator);

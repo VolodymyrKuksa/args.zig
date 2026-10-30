@@ -22,8 +22,6 @@ pub const help = @import("help.zig");
 pub const completion = @import("completion.zig");
 /// Configuration options for parser behavior.
 pub const config = @import("config.zig");
-/// Version information for the library.
-pub const version_info = @import("version.zig");
 /// General utilities (string matching, fuzzy search, etc.).
 pub const utils = @import("utils.zig");
 /// Constants for help formatting, error messages, and defaults.
